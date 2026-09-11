@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 CATALOG_PATH = Path(__file__).resolve().parent.parent / "catalog" / "tv" / "all.json"
 META_DIR = Path(__file__).resolve().parent.parent / "meta" / "tv"
 GENRE_DIR = Path(__file__).resolve().parent.parent / "catalog" / "tv" / "all"
+STREAM_DIR = Path(__file__).resolve().parent.parent / "stream" / "tv"
 
 _NON_US_SUFFIXES = [
     "international", "italia", "indonesia", "finland", "arabic", "uk ",
@@ -114,10 +115,10 @@ def _match_streams(channels: list[dict], working: list[dict], catalog_norms: set
 
 def inject(test_results_path: str = "data/test_results.json") -> dict:
     results_path = Path(__file__).resolve().parent.parent / test_results_path
-    results = json.load(open(results_path))
+    results = json.loads(results_path.read_text())
     working = [r for r in results if r["status"] == "working"]
 
-    catalog = json.load(open(CATALOG_PATH))
+    catalog = json.loads(CATALOG_PATH.read_text())
     channels = catalog["metas"]
 
     catalog_norms = {_normalize(ch["name"]) for ch in channels}
@@ -145,7 +146,7 @@ def inject(test_results_path: str = "data/test_results.json") -> dict:
 
         ch["streams"] = streams
 
-    json.dump(catalog, open(CATALOG_PATH, "w"), separators=(",", ":"))
+    CATALOG_PATH.write_text(json.dumps(catalog, separators=(",", ":")))
 
     genre_channels: dict[str, list] = {}
     for ch in channels:
@@ -156,12 +157,16 @@ def inject(test_results_path: str = "data/test_results.json") -> dict:
     GENRE_DIR.mkdir(parents=True, exist_ok=True)
     for genre, chs in genre_channels.items():
         genre_file = GENRE_DIR / f"genre={genre}.json"
-        json.dump({"metas": chs}, open(genre_file, "w"), separators=(",", ":"))
+        genre_file.write_text(json.dumps({"metas": chs}, separators=(",", ":")))
 
     for ch in channels:
         meta_file = META_DIR / f"{ch['id']}.json"
         if meta_file.exists():
-            json.dump({"meta": ch}, open(meta_file, "w"), separators=(",", ":"))
+            meta_file.write_text(json.dumps({"meta": ch}, separators=(",", ":")))
+
+        stream_file = STREAM_DIR / f"{ch['id']}.json"
+        if stream_file.exists():
+            stream_file.write_text(json.dumps({"streams": ch["streams"]}, separators=(",", ":")))
 
     return stats
 
