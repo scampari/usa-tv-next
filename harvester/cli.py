@@ -10,11 +10,32 @@ import yaml
 from rich.console import Console
 from rich.table import Table
 
-from harvester.config import DATA_DIR, DEFAULT_HARVEST_CONCURRENCY, DEFAULT_TEST_CONCURRENCY, DEFAULT_TIMEOUT, SOURCES_FILE
+from harvester.config import (
+    DATA_DIR,
+    DEFAULT_HARVEST_CONCURRENCY,
+    DEFAULT_TEST_CONCURRENCY,
+    DEFAULT_TIMEOUT,
+    SOURCES_FILE,
+)
 from harvester.dedup import deduplicate
-from harvester.models import HarvestState, ParsedStream, SourceConfig, SourceType, StreamTestResult, TestState
+from harvester.models import (
+    HarvestState,
+    ParsedStream,
+    SourceConfig,
+    SourceType,
+    StreamTestResult,
+    TestState,
+)
 from harvester.report import generate_report, print_summary, save_report
-from harvester.state import load_harvest_state, load_streams, load_test_state, save_harvest_state, save_results, save_streams, save_test_state
+from harvester.state import (
+    load_harvest_state,
+    load_streams,
+    load_test_state,
+    save_harvest_state,
+    save_results,
+    save_streams,
+    save_test_state,
+)
 from harvester.tester import test_streams
 
 console = Console()
@@ -69,7 +90,7 @@ async def _harvest(sources: list[SourceConfig], concurrency: int, resume: bool) 
                     streams = await scraper.fetch(session)
                     console.print(f"  [green]OK[/] {sid}: {len(streams)} streams")
                     return sid, streams
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001 - one broken source must not abort the harvest
                     console.print(f"  [red]FAIL[/] {sid}: {e}")
                     return sid, []
 
@@ -114,7 +135,6 @@ async def _test(streams: list[ParsedStream], timeout: float, concurrency: int, r
 @click.group()
 def main():
     """IPTV Stream Harvester — discover, test, and report on live streams."""
-    pass
 
 
 @main.command()
@@ -217,7 +237,11 @@ def inject_cmd(input_file):
 @click.option("--harvest-concurrency", type=int, default=DEFAULT_HARVEST_CONCURRENCY)
 @click.option("--test-concurrency", type=int, default=DEFAULT_TEST_CONCURRENCY)
 @click.option("--resume/--no-resume", default=True)
-def run(sources_file, filter_type, filter_name, timeout, harvest_concurrency, test_concurrency, resume):
+@click.option(
+    "--all-streams/--catalog-only", default=False,
+    help="Test every harvested stream, not only those matching a catalog channel",
+)
+def run(sources_file, filter_type, filter_name, timeout, harvest_concurrency, test_concurrency, resume, all_streams):
     """Execute harvest + test + report in sequence."""
     sources = _load_sources(Path(sources_file), filter_type, filter_name)
     if not sources:
@@ -226,6 +250,11 @@ def run(sources_file, filter_type, filter_name, timeout, harvest_concurrency, te
 
     async def pipeline():
         streams = await _harvest(sources, harvest_concurrency, resume)
+        if not all_streams:
+            from harvester.inject import catalog_candidates
+            harvested = len(streams)
+            streams = catalog_candidates(streams)
+            console.print(f"[bold]Testing {len(streams)} of {harvested} streams that match catalog channels[/]")
         results = await _test(streams, timeout, test_concurrency, resume)
 
         from harvester.inject import inject

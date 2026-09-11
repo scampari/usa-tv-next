@@ -6,6 +6,8 @@ import re
 from pathlib import Path
 from urllib.parse import urlparse
 
+from harvester.models import ParsedStream
+
 CATALOG_PATH = Path(__file__).resolve().parent.parent / "catalog" / "tv" / "all.json"
 META_DIR = Path(__file__).resolve().parent.parent / "meta" / "tv"
 GENRE_DIR = Path(__file__).resolve().parent.parent / "catalog" / "tv" / "all"
@@ -111,6 +113,20 @@ def _match_streams(channels: list[dict], working: list[dict], catalog_norms: set
             matches.setdefault(ch_id, []).append(r)
 
     return matches
+
+
+def catalog_candidates(streams: list[ParsedStream]) -> list[ParsedStream]:
+    """Keep only harvested streams that inject could attach to a catalog channel.
+
+    Harvests hold well over 100k streams and under 2% match a catalog
+    channel, so testing only these keeps a run to minutes instead of hours.
+    """
+    channels = json.loads(CATALOG_PATH.read_text())["metas"]
+    catalog_norms = {_normalize(ch["name"]) for ch in channels}
+    entries = [{"channel_name": s.channel_name, "url": s.url} for s in streams]
+    matches = _match_streams(channels, entries, catalog_norms)
+    matched_urls = {r["url"] for rs in matches.values() for r in rs}
+    return [s for s in streams if s.url in matched_urls]
 
 
 def inject(test_results_path: str = "data/test_results.json") -> dict:
