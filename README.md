@@ -7,10 +7,10 @@ Static Stremio addon hosted entirely on GitHub using raw URLs — no server requ
 ## Install
 
 ```
-stremio://raw.githubusercontent.com/yowmamasita/usa-tv-next/main/manifest.json
+stremio://raw.githubusercontent.com/scampari/usa-tv-next/main/manifest.json
 ```
 
-[Install via Stremio Web](https://web.stremio.com/#/addons?addon=https%3A%2F%2Fraw.githubusercontent.com%2Fyowmamasita%2Fusa-tv-next%2Fmain%2Fmanifest.json)
+[Install via Stremio Web](https://web.stremio.com/#/addons?addon=https%3A%2F%2Fraw.githubusercontent.com%2Fscampari%2Fusa-tv-next%2Fmain%2Fmanifest.json)
 
 ## Routes
 
