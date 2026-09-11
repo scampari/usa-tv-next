@@ -4,24 +4,37 @@ import asyncio
 import json
 import socket
 import time
-from collections import defaultdict
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
-from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, MofNCompleteColumn
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+)
 
 from harvester.models import CodecInfo, ParsedStream, StreamStatus, StreamTestResult
 
+# Lookups get a dedicated pool sized to the DNS semaphore. With the shared
+# default executor, queued lookups spent their timeout waiting for a thread
+# and live hosts were reported dead.
+DNS_CONCURRENCY = 32
+_DNS_EXECUTOR = ThreadPoolExecutor(max_workers=DNS_CONCURRENCY, thread_name_prefix="dns")
+
 
 async def _resolve_host(host: str, timeout: float = 3.0) -> bool:
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     try:
         await asyncio.wait_for(
-            loop.run_in_executor(None, socket.getaddrinfo, host, None),
+            loop.run_in_executor(_DNS_EXECUTOR, socket.getaddrinfo, host, None),
             timeout=timeout,
         )
         return True
-    except Exception:
+    except (OSError, asyncio.TimeoutError):
         return False
 
 
@@ -101,7 +114,7 @@ async def test_streams(
     timeout: float = 8.0,
     concurrency: int = 50,
     tested_urls: dict[str, str] | None = None,
-    on_result: callable = None,
+    on_result: Callable | None = None,
 ) -> list[StreamTestResult]:
     tested = tested_urls or {}
     results: list[StreamTestResult] = []
@@ -122,14 +135,14 @@ async def test_streams(
         for s in urls_to_test:
             try:
                 host = urlparse(s.url).hostname or ""
-            except Exception:
+            except ValueError:
                 host = ""
             hosts_by_stream[s.url] = host
             if host:
                 unique_hosts.add(host)
 
         dns_task = progress.add_task("DNS resolve", total=len(unique_hosts), working=0, dead=0, timeout=0)
-        dns_sem = asyncio.Semaphore(200)
+        dns_sem = asyncio.Semaphore(DNS_CONCURRENCY)
         live_hosts: set[str] = set()
         dead_host_count = 0
 
@@ -146,6 +159,22 @@ async def test_streams(
         for host, alive in dns_results:
             if alive:
                 live_hosts.add(host)
+
+        # Resolvers throttle bursts, so confirm failures slowly before
+        # dropping every stream on a host.
+        failed_hosts = unique_hosts - live_hosts
+        if failed_hosts:
+            retry_sem = asyncio.Semaphore(4)
+
+            async def confirm(host: str) -> tuple[str, bool]:
+                async with retry_sem:
+                    return host, await _resolve_host(host, timeout=10.0)
+
+            for host, alive in await asyncio.gather(*[confirm(h) for h in failed_hosts]):
+                if alive:
+                    live_hosts.add(host)
+                    dead_host_count -= 1
+            progress.update(dns_task, dead=dead_host_count)
 
         alive_streams = []
         for s in urls_to_test:
