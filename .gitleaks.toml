@@ -1,0 +1,27 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Public Vizio free-TV channel tags in harvested stream URLs. Each decodes to {\"aud\":\"93|98\",\"wfpcid\":<channel number>}, grants no access, and is already public in upstream yowmamasita/usa-tv-next."
+regexTarget = "match"
+regexes = [
+  '''eyJhdWQiOiI5MyIsIndmcGNpZCI6NDczNDk0OTAwNn0''',
+  '''eyJhdWQiOiI5MyIsIndmcGNpZCI6MzEyMzY4Mzc0Nn0''',
+  '''eyJhdWQiOiI5MyIsIndmcGNpZCI6NDAzODYwOTY1Nn0''',
+  '''eyJhdWQiOiI5MyIsIndmcGNpZCI6Mzk3MjA5NzM3OX0''',
+  '''eyJhdWQiOiI5MyIsIndmcGNpZCI6Mzk3MjA5NzM4MX0''',
+  '''eyJhdWQiOiI5MyIsIndmcGNpZCI6NDAzODYwOTY1NH0''',
+  '''eyJhdWQiOiI5MyIsIndmcGNpZCI6NDczNTA3ODcyNX0''',
+  '''eyJhdWQiOiI5OCIsIndmcGNpZCI6NDE5MjUxMjY1NX0''',
+  '''eyJhdWQiOiI5MyIsIndmcGNpZCI6MzgyNTA3NzYzNX0''',
+  '''eyJhdWQiOiI5MyIsIndmcGNpZCI6NDAzODYwOTY1Mn0''',
+]
+
+[[allowlists]]
+description = "Public access tokens embedded in free IPTV stream URLs harvested from public playlists. Shared by every viewer of those playlists, not account credentials, and already public in upstream yowmamasita/usa-tv-next."
+regexTarget = "match"
+regexes = [
+  '''f3fc3aaf7592e99b0e130d2c47373099''',
+  '''3d319d99045811bace569a7cc2885eb3''',
+  '''7551ec4daacd3d773ab2a992615f1f6c''',
+]
