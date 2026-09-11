@@ -1,8 +1,15 @@
 # USA TV Next
 
-190 live TV channels across 10 genres: Sports, Entertainment, News, Premium, Kids, Lifestyle, Documentaries, Local, Music, Latino.
+Live US TV channels across 10 genres: Sports, Entertainment, News, Premium, Kids, Lifestyle, Documentaries, Local, Music, Latino.
 
-Static Stremio addon hosted entirely on GitHub using raw URLs — no server required.
+Static Stremio addon hosted entirely on GitHub using raw URLs, with no server required.
+
+## Daily updates
+
+A GitHub Actions workflow (`.github/workflows/daily-update.yml`) runs every day at 09:17 UTC.
+It finds new streams, tests them with ffprobe, adds the working ones and removes dead ones.
+It only publishes when `python -m harvester.check` passes: all data files must agree, and working channels must not drop more than 15% from the previous commit.
+Run it by hand from the Actions tab with "Run workflow".
 
 ## Install
 
