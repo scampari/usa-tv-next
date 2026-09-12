@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import socket
 import time
@@ -93,6 +94,12 @@ async def test_stream(url: str, timeout: float = 8.0) -> StreamTestResult:
 
     except asyncio.TimeoutError:
         elapsed_ms = int((time.monotonic() - start) * 1000)
+        # ffprobe is still running: stop it and reap it, or it keeps using the
+        # host for the rest of the run and its pipes are closed only after the
+        # event loop has gone, which raises RuntimeError during shutdown.
+        with contextlib.suppress(ProcessLookupError):
+            proc.kill()
+            await proc.wait()
         return StreamTestResult(
             url=url,
             status=StreamStatus.TIMEOUT,
