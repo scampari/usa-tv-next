@@ -42,6 +42,9 @@ jobs:
       - name: Remove dead streams
         run: uv run python -m harvester prune
 
+      - name: Remove audio-only and non-US streams
+        run: uv run python -m harvester clean
+
       - name: Check data before publishing
         run: uv run python -m harvester.check --baseline-ref HEAD
 

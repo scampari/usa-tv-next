@@ -23,6 +23,7 @@ from harvester.models import (
     ParsedStream,
     SourceConfig,
     SourceType,
+    StreamStatus,
     StreamTestResult,
     TestState,
 )
@@ -219,6 +220,18 @@ def prune(timeout, concurrency, dry_run):
     console.print(f"\n[bold]Tested: {stats['tested']}, Dead: {stats['dead']}, Removed: {stats['removed']}[/]")
 
 
+@main.command()
+@click.option("--dry-run", is_flag=True, default=False, help="Report only, don't modify files")
+def clean(dry_run):
+    """Drop audio-only and non-US streams, and label the rest with their country."""
+    from harvester.clean import clean as do_clean
+    stats = do_clean(dry_run=dry_run)
+    console.print(
+        f"\n[bold]Removed: {stats['removed']}, relabelled: {stats['labelled']}, "
+        f"channels with streams: {stats['channels']}[/]"
+    )
+
+
 @main.command("inject")
 @click.option("--input", "input_file", type=str, default="data/test_results.json")
 def inject_cmd(input_file):
@@ -257,10 +270,15 @@ def run(sources_file, filter_type, filter_name, timeout, harvest_concurrency, te
             console.print(f"[bold]Testing {len(streams)} of {harvested} streams that match catalog channels[/]")
         results = await _test(streams, timeout, test_concurrency, resume)
 
+        from harvester.geo import host_of, locate_hosts
         from harvester.inject import inject
         console.print("\n[bold]Injecting working streams into catalog...[/]")
-        stats = inject()
-        console.print(f"  Channels updated: {stats['channels_updated']}, Streams added: {stats['streams_added']}")
+        host_geo = await locate_hosts({host_of(r.url) for r in results if r.status == StreamStatus.WORKING})
+        stats = inject(host_geo=host_geo)
+        console.print(
+            f"  Channels updated: {stats['channels_updated']}, Streams added: {stats['streams_added']}, "
+            f"Skipped as audio-only: {stats['streams_skipped']}"
+        )
 
         rep = generate_report(results, sources_total=len(sources))
         save_report(rep)

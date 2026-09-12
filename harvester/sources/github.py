@@ -7,7 +7,7 @@ import os
 
 import aiohttp
 
-from harvester.models import ParsedStream, SourceConfig
+from harvester.models import ParsedStream
 from harvester.parser import parse_m3u
 from harvester.sources.base import BaseSource
 
@@ -87,7 +87,6 @@ class GitHubSource(BaseSource):
 
         streams: list[ParsedStream] = []
         sem = asyncio.Semaphore(5)
-        resolved_branch = branch
 
         async def fetch_raw(path: str, br: str) -> tuple[str, list[ParsedStream]]:
             async with sem:
@@ -113,7 +112,6 @@ class GitHubSource(BaseSource):
                 for r in results:
                     if isinstance(r, tuple) and r[1]:
                         streams.extend(r[1])
-                        resolved_branch = "master"
 
         # Strategy 2: If we have glob patterns, try tree API first, then brute-force common paths
         if glob_patterns:
@@ -147,7 +145,6 @@ class GitHubSource(BaseSource):
     ) -> list[ParsedStream]:
         sem = asyncio.Semaphore(10)
         streams: list[ParsedStream] = []
-        found_branch = branch
 
         async def try_path(path: str, br: str) -> list[ParsedStream]:
             async with sem:

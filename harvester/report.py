@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
-from pathlib import Path
 
 from harvester.config import DATA_DIR
 from harvester.models import Report, StreamTestResult
@@ -36,7 +35,7 @@ def save_report(report: Report, filename: str = "report.json"):
 def print_summary(report: Report):
     s = report.summary
     print(f"\n{'='*50}")
-    print(f"  IPTV Stream Harvester Report")
+    print("  IPTV Stream Harvester Report")
     print(f"  Generated: {report.generated_at}")
     print(f"{'='*50}")
     print(f"  Total streams tested: {s.get('total_streams_tested', 0):,}")

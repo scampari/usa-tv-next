@@ -1,1 +1,1 @@
-{"streams":[{"url":"http://23.237.104.106:8080/USA_DISNEY_XD/index.m3u8","behaviorHints":{"notWebReady":true},"name":"HD","description":"HV:23"},{"url":"http://185.227.34.179:8080/disney-xd/index.m3u8","behaviorHints":{"notWebReady":true},"name":"SD","description":"HV:185"}]}
+{"streams":[{"url":"http://23.237.104.106:8080/USA_DISNEY_XD/index.m3u8","behaviorHints":{"notWebReady":true},"name":"HD","description":"US \u00b7 HV:23"}]}

@@ -7,19 +7,20 @@ from __future__ import annotations
 
 import asyncio
 import json
-from pathlib import Path
 
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, MofNCompleteColumn
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+)
 
 from harvester.config import DEFAULT_TEST_CONCURRENCY, DEFAULT_TIMEOUT
 from harvester.models import ParsedStream, StreamStatus
+from harvester.publish import CATALOG_PATH, write_addon
 from harvester.tester import test_stream, test_streams
-
-CATALOG_PATH = Path(__file__).resolve().parent.parent / "catalog" / "tv" / "all.json"
-META_DIR = Path(__file__).resolve().parent.parent / "meta" / "tv"
-GENRE_DIR = Path(__file__).resolve().parent.parent / "catalog" / "tv" / "all"
-STREAM_DIR = Path(__file__).resolve().parent.parent / "stream" / "tv"
 
 RETRY_INTERVAL = 30
 RETRY_DURATION = 600
@@ -116,27 +117,7 @@ async def _prune(timeout: float, concurrency: int, dry_run: bool) -> dict:
         ch["streams"] = _remove_dead_from_list(ch.get("streams", []), dead_urls)
         removed += before - len(ch["streams"])
 
-    CATALOG_PATH.write_text(json.dumps(catalog, separators=(",", ":")))
-
-    genre_channels: dict[str, list] = {}
-    for ch in catalog["metas"]:
-        genre = ch.get("genre", "")
-        if genre:
-            genre_channels.setdefault(genre, []).append(ch)
-
-    GENRE_DIR.mkdir(parents=True, exist_ok=True)
-    for genre, chs in genre_channels.items():
-        genre_file = GENRE_DIR / f"genre={genre}.json"
-        genre_file.write_text(json.dumps({"metas": chs}, separators=(",", ":")))
-
-    for ch in catalog["metas"]:
-        meta_file = META_DIR / f"{ch['id']}.json"
-        if meta_file.exists():
-            meta_file.write_text(json.dumps({"meta": ch}, separators=(",", ":")))
-
-        stream_file = STREAM_DIR / f"{ch['id']}.json"
-        if stream_file.exists():
-            stream_file.write_text(json.dumps({"streams": ch["streams"]}, separators=(",", ":")))
+    write_addon(catalog)
 
     console.print(f"[bold green]Removed {removed} dead streams from catalog[/]")
     return {"tested": len(results), "dead": len(dead_urls), "removed": removed}

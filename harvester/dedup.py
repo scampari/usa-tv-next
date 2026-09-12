@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 from harvester.models import ParsedStream
 
@@ -21,7 +21,7 @@ def normalize_url(url: str) -> str:
         query = urlencode(filtered, doseq=True)
         host_part = hostname + (f":{port}" if port else "")
         return urlunparse((parsed.scheme, host_part, path, "", query, ""))
-    except Exception:
+    except ValueError:
         return url
 
 

@@ -19,6 +19,16 @@ stremio://raw.githubusercontent.com/scampari/usa-tv-next/main/manifest.json
 
 [Install via Stremio Web](https://web.stremio.com/#/addons?addon=https%3A%2F%2Fraw.githubusercontent.com%2Fscampari%2Fusa-tv-next%2Fmain%2Fmanifest.json)
 
+## Which streams are kept
+
+Each stream is labelled with the country it broadcasts from, shown before its source tag, as in `US · HV:CONTENT`.
+The country comes from the stream's own playlist metadata first, then from providers that only serve one country, then from the serving address, ignoring CDN edges because those say where the viewer is.
+
+`python -m harvester clean` drops streams that do not belong and labels the rest:
+
+- audio-only streams are always removed;
+- streams that broadcast from outside the US are removed when the channel has another stream, and kept, labelled, when they are the channel's only source.
+
 ## Routes
 
 | Stremio Resource | URL Path |

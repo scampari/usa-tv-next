@@ -1,17 +1,16 @@
 """Inject working harvested streams into existing Stremio addon catalogs."""
 from __future__ import annotations
 
+import asyncio
 import json
 import re
-from pathlib import Path
 from urllib.parse import urlparse
 
+from harvester.filters import broadcast_country, describe
+from harvester.geo import host_of, locate_hosts
 from harvester.models import ParsedStream
-
-CATALOG_PATH = Path(__file__).resolve().parent.parent / "catalog" / "tv" / "all.json"
-META_DIR = Path(__file__).resolve().parent.parent / "meta" / "tv"
-GENRE_DIR = Path(__file__).resolve().parent.parent / "catalog" / "tv" / "all"
-STREAM_DIR = Path(__file__).resolve().parent.parent / "stream" / "tv"
+from harvester.publish import BASE_DIR, CATALOG_PATH, write_addon
+from harvester.state import load_streams
 
 _NON_US_SUFFIXES = [
     "international", "italia", "indonesia", "finland", "arabic", "uk ",
@@ -129,8 +128,8 @@ def catalog_candidates(streams: list[ParsedStream]) -> list[ParsedStream]:
     return [s for s in streams if s.url in matched_urls]
 
 
-def inject(test_results_path: str = "data/test_results.json") -> dict:
-    results_path = Path(__file__).resolve().parent.parent / test_results_path
+def inject(test_results_path: str = "data/test_results.json", host_geo: dict[str, dict] | None = None) -> dict:
+    results_path = BASE_DIR / test_results_path
     results = json.loads(results_path.read_text())
     working = [r for r in results if r["status"] == "working"]
 
@@ -141,7 +140,13 @@ def inject(test_results_path: str = "data/test_results.json") -> dict:
 
     channel_matches = _match_streams(channels, working, catalog_norms)
 
-    stats = {"channels_updated": 0, "streams_added": 0}
+    # A test result carries no tvg-id, so the country a stream claims for
+    # itself has to come from the harvested record with the same URL.
+    records = {stream["url"]: stream for stream in load_streams() or []}
+    if host_geo is None:
+        host_geo = asyncio.run(locate_hosts({host_of(r["url"]) for r in working}))
+
+    stats = {"channels_updated": 0, "streams_added": 0, "streams_skipped": 0}
 
     for ch in channels:
         streams = ch.get("streams", [])
@@ -152,37 +157,27 @@ def inject(test_results_path: str = "data/test_results.json") -> dict:
             if r["url"] not in existing_urls
         ]
 
-        if new_streams:
-            for r in new_streams:
-                entry = _make_stream_entry(r)
-                streams.append(entry)
-                existing_urls.add(r["url"])
-                stats["streams_added"] += 1
+        added = 0
+        for r in new_streams:
+            record = records.get(r["url"])
+            # Where a stream broadcasts from is decided for the channel as a
+            # whole, by clean, so that a channel with no US source keeps one.
+            if _quality_label(r) == "Audio":
+                stats["streams_skipped"] += 1
+                continue
+            entry = _make_stream_entry(r)
+            entry["description"] = describe(entry["description"], broadcast_country(r["url"], record, host_geo))
+            streams.append(entry)
+            existing_urls.add(r["url"])
+            added += 1
+
+        if added:
+            stats["streams_added"] += added
             stats["channels_updated"] += 1
 
         ch["streams"] = streams
 
-    CATALOG_PATH.write_text(json.dumps(catalog, separators=(",", ":")))
-
-    genre_channels: dict[str, list] = {}
-    for ch in channels:
-        genre = ch.get("genre", "")
-        if genre:
-            genre_channels.setdefault(genre, []).append(ch)
-
-    GENRE_DIR.mkdir(parents=True, exist_ok=True)
-    for genre, chs in genre_channels.items():
-        genre_file = GENRE_DIR / f"genre={genre}.json"
-        genre_file.write_text(json.dumps({"metas": chs}, separators=(",", ":")))
-
-    for ch in channels:
-        meta_file = META_DIR / f"{ch['id']}.json"
-        if meta_file.exists():
-            meta_file.write_text(json.dumps({"meta": ch}, separators=(",", ":")))
-
-        stream_file = STREAM_DIR / f"{ch['id']}.json"
-        if stream_file.exists():
-            stream_file.write_text(json.dumps({"streams": ch["streams"]}, separators=(",", ":")))
+    write_addon(catalog)
 
     return stats
 

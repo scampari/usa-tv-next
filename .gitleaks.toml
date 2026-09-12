@@ -15,6 +15,15 @@ regexes = [
   '''eyJhdWQiOiI5OCIsIndmcGNpZCI6NDE5MjUxMjY1NX0''',
   '''eyJhdWQiOiI5MyIsIndmcGNpZCI6MzgyNTA3NzYzNX0''',
   '''eyJhdWQiOiI5MyIsIndmcGNpZCI6NDAzODYwOTY1Mn0''',
+  '''eyJhdWQiOiI5OCIsIndmcGNpZCI6MzgwNTcxNjk3Nn0''',
+  '''eyJhdWQiOiI5OCIsIndmcGNpZCI6Mzc2NTEwMzgwNn0''',
+  '''eyJhdWQiOiI5OCIsIndmcGNpZCI6Mjk2ODYwMjQ2Nn0''',
+  '''eyJhdWQiOiI5OCIsIndmcGNpZCI6Mzk5Njk0OTA2Mn0''',
+  '''eyJhdWQiOiI5OCIsIndmcGNpZCI6NDY3OTU2MjUyNH0''',
+  '''eyJhdWQiOiI5OCIsIndmcGNpZCI6Mzc2NTEwMzgwNX0''',
+  '''eyJhdWQiOiI5OCIsIndmcGNpZCI6Mzc4ODM2ODI3MX0''',
+  '''eyJhdWQiOiI5OCIsIndmcGNpZCI6NDY3OTU2MjUyM30''',
+  '''eyJhdWQiOiI5OCIsIndmcGNpZCI6MzA3NDI3NTc1M30''',
 ]
 
 [[allowlists]]
@@ -24,4 +33,12 @@ regexes = [
   '''f3fc3aaf7592e99b0e130d2c47373099''',
   '''3d319d99045811bace569a7cc2885eb3''',
   '''7551ec4daacd3d773ab2a992615f1f6c''',
+  '''cac9ac4bc54a6e48978f2fae429de506''',
+  '''b1b12d40a9966b3fbfc1653626e09f42''',
+  '''68093cc976c69de22a5f01b8034edf41''',
+  '''d701f3665e12964090ddd656a9a89c29''',
+  '''fbc560646ea38d9fce118fcd264926c5''',
+  '''93bce8c31c0b8ab66f85c4aa716baae0''',
+  '''1a9cf0bc5e79f08de29d345545216d31''',
+  '''dabd0667017770543635be4bb1f63c22''',
 ]

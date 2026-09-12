@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import aiohttp
 
-from harvester.models import ParsedStream, SourceConfig
+from harvester.models import ParsedStream
 from harvester.parser import parse_m3u
 from harvester.sources.base import BaseSource
 
