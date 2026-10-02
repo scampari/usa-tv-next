@@ -1,1 +1,1 @@
-{"streams":[{"url":"http://stream.mcquack.net/231/index.m3u8","behaviorHints":{"notWebReady":true},"name":"FHD","description":"GB \u00b7 HV:STREAM"},{"url":"http://212.70.131.37:8000/play/a04w","behaviorHints":{"notWebReady":true},"name":"SD","description":"BG \u00b7 HV:212"}]}
+{"streams":[{"url":"http://stream.mcquack.net/231/index.m3u8","behaviorHints":{"notWebReady":true},"name":"FHD","description":"UA \u00b7 HV:STREAM"},{"url":"http://212.70.131.37:8000/play/a04w","behaviorHints":{"notWebReady":true},"name":"SD","description":"BG \u00b7 HV:212"}]}

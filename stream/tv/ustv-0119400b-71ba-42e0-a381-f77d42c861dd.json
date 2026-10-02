@@ -1,1 +1,1 @@
-{"streams":[{"url":"http://151.80.18.177:86/Disney_Channel_HD/index.m3u8","behaviorHints":{"notWebReady":true},"name":"FHD","description":"HV:151"}]}
+{"streams":[{"url":"http://151.80.18.177:86/Disney_Channel_HD/index.m3u8","behaviorHints":{"notWebReady":true},"name":"FHD","description":"HV:151"},{"url":"http://4.30.180.36:8420/disneychannel/index.m3u8?token=test","behaviorHints":{"notWebReady":true},"name":"HD","description":"US \u00b7 HV:4"}]}
