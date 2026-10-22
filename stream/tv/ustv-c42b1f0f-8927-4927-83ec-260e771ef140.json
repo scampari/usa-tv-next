@@ -1,1 +1,1 @@
-{"streams":[{"url":"http://198.58.104.90:8989/natgeo/index.m3u8","behaviorHints":{"notWebReady":true},"name":"HD","description":"US \u00b7 HV:198"}]}
+{"streams":[{"url":"http://198.58.104.90:8989/natgeo/index.m3u8","behaviorHints":{"notWebReady":true},"name":"HD","description":"US \u00b7 HV:198"},{"url":"http://15.204.246.24:8080/NatGeoHD/index.m3u8","behaviorHints":{"notWebReady":true},"name":"FHD","description":"US \u00b7 HV:15"}]}
